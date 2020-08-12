@@ -1,0 +1,757 @@
+SET !EXTRACT_TEST_POPUP NO
+SET !ERRORIGNORE YES
+SET !TIMEOUT_STEP 0
+CMDLINE !DATASOURCE {{!FOLDER_DATASOURCE}}/ids.csv
+SET !DATASOURCE_COLUMNS 2
+SET !DATASOURCE_LINE {{csvLine}}
+SET SEC EVAL ("var y = \"0\"; if (\"1\"==\"{{csvLine}}\") {y=\"10\";} y;")
+WAIT SECONDS={{SEC}}
+TAB T=1
+URL GOTO=file:///{{!FOLDER_DATASOURCE}}/IDS/{{!COL1}}.htm
+TAG POS=1 TYPE=i attr=txt:{{!COL1}}_FRMN_ID_* EXTRACT=txt
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/_FRMN_ID_(.*)/,''); ")
+SET SKIPEXISTS EVAL("var y = \"no\"; if (\"{{!COL1}}\"==\"{{!EXTRACT}}\") {y=\"yes\";} y;")
+SET !EXTRACT NULL
+SET DOT EVAL("var s='{{!COL1}}'; var x; x=s.split('.'); x[0];")
+SET PLATFORM EVAL("var y = \"Android\"; if (\"{{DOT}}\"==\"{{!COL1}}\") {y=\"iOS\";} y;")
+SET URL EVAL("var y = \"https://play.google.com/store/apps/details?id={{!COL1}}&hl=en\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"https://apps.apple.com/us/app/id{{!COL1}}\";} y;")
+SET URL EVAL("var y = \"{{URL}}\"; if (\"{{!COL1}}\"==\"trendbot_signingoff\") {y=\"imacros://run/?m=Done.iim\";} y;")
+SET !EXTRACT trendbot_signingoff
+SET STOPFILE EVAL("var y = \"\"; if (\"{{!COL1}}\"==\"trendbot_signingoff\") {y=\"Daily_Trends_Data.csv\";} y;")
+SAVEAS TYPE=EXTRACT FOLDER={{!FOLDER_DATASOURCE}} FILE={{STOPFILE}}
+SET !EXTRACT NULL
+SET URL EVAL("var y = \"{{URL}}\"; if (\"{{SKIPEXISTS}}\"==\"yes\") {y=\"ya.ru\";} y;")
+URL GOTO={{URL}}
+WAIT SECONDS=1
+TAG POS=1 TYPE=SPAN ATTR=CLass:T32cc<SP>UAO9ie EXTRACT=TXT
+SET SKIPME EVAL("var y = \"0\"; if (\"#EANF#\"==\"{{!EXTRACT}}\") {y=\"1\";} y;")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET COMPNAME {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=H1 ATTR=CLass:AHFaub EXTRACT=TXT
+SET COUNT1 EVAL("var s=\"{{!EXTRACT}}\"; s.length")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/[^\x00-\x7F]/g,''); ")
+SET COUNT2 EVAL("var s=\"{{!EXTRACT}}\"; s.length")
+ADD COUNT1 -{{COUNT2}}
+ADD COUNT2 -{{COUNT1}}
+SET SKIPME EVAL("var y = \"{{SKIPME}}\"; if (\"0\">\"{{COUNT2}}\") {y=\"1\";} y;")
+SET !EXTRACT NULL
+TAG POS=1 TYPE=H1 ATTR=CLass:AHFaub EXTRACT=TXT
+SET SKIPME EVAL("var y = \"{{SKIPME}}\"; if (\"#EANF#\"==\"{{!EXTRACT}}\") {y=\"1\";} y;")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/&amp;/g,'&'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/&nbsp;/g,' '); ")
+SET FORCHECK EVAL("var variable=\"{{!EXTRACT}}\".toLowerCase(); variable.replace(/(.*)[ç,ı,ş,ğ,ä,ö,ü](.*)/,'foreign_skip'); ")
+SET SKIPME EVAL("var y = \"{{SKIPME}}\"; if (\"foreign_skip\"==\"{{FORCHECK}}\") {y=\"1\";} y;")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/[^\x00-\x7F]/g,''); ")
+SET SKIPME EVAL("var y = \"{{SKIPME}}\"; if (\"\"==\"{{!EXTRACT}}\") {y=\"1\";} y;")
+SET PRODNAME {{!EXTRACT}}
+SET !EXTRACT NULL
+SET SEC EVAL("var y = \"0\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"1\";} y;")
+WAIT SECONDS={{SEC}}
+TAG POS=1 TYPE=A ATTR=CLASS:link&&href:*apps.apple.com/us/developer/* EXTRACT=TXT
+SET SKIPMEIT EVAL("var y = \"0\"; if (\"#EANF#\"==\"{{!EXTRACT}}\") {y=\"1\";} y;")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/\\n/g,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/  /g,''); ")
+SET ITCOMPNAME {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=H1 ATTR=CLASS:product-header__title* EXTRACT=TXT
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/\\n/g,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/  /g,''); ")
+SET COUNT1 EVAL("var s=\"{{!EXTRACT}}\"; s.length")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/[^\x00-\x7F]/g,''); ")
+SET COUNT2 EVAL("var s=\"{{!EXTRACT}}\"; s.length")
+ADD COUNT1 -{{COUNT2}}
+ADD COUNT2 -{{COUNT1}}
+SET SKIPMEIT EVAL("var y = \"{{SKIPMEIT}}\"; if (\"0\">\"{{COUNT2}}\") {y=\"1\";} y;")
+SET !EXTRACT NULL
+TAG POS=1 TYPE=H1 ATTR=CLASS:product-header__title* EXTRACT=HTM
+SET SKIPMEIT EVAL("var y = \"{{SKIPMEIT}}\"; if (\"#EANF#\"==\"{{!EXTRACT}}\") {y=\"1\";} y;")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/           <span class=(.+)/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/<h1 class=\"product-header__title(.+)\">         /,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/           <span(.+)/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/<h1 (.+)\">         /,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/&amp;/g,'&'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/&nbsp;/g,' '); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/&lt;/g,'<'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/&gt;/g,'>'); ")
+SET FORCHECK EVAL("var variable=\"{{!EXTRACT}}\".toLowerCase(); variable.replace(/(.*)[ç,ı,ş,ğ,ä,ö,ü](.*)/,'foreign_skip'); ")
+SET SKIPMEIT EVAL("var y = \"{{SKIPMEIT}}\"; if (\"foreign_skip\"==\"{{FORCHECK}}\") {y=\"1\";} y;")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/[^\x00-\x7F]/g,''); ")
+SET SKIPMEIT EVAL("var y = \"{{SKIPMEIT}}\"; if (\"\"==\"{{!EXTRACT}}\") {y=\"1\";} y;")
+SET ITPRODNAME {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=P ATTR=CLASS:l-column<SP>small-6<SP>medium-12<SP>whats-new__latest__version EXTRACT=HTM
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/<p class=\"l-column small-6 medium-12 whats-new__latest__version(.+)\">Version /,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/<p (.+)\">Version /,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/<\\/p>/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/&amp;/g,'&'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/&nbsp;/g,' '); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/&lt;/g,'<'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/&gt;/g,'>'); ")
+SET ITVERSION {{!EXTRACT}}
+SET !EXTRACT NULL
+SET SEC EVAL("var y = \"0\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"1\";} y;")
+TAG POS={{SEC}} TYPE=BUTTON ATTR=TXT:more
+WAIT SECONDS={{SEC}}
+TAG POS=1 TYPE=H2 ATTR=class:product-header__subtitle<SP>*app-header* EXTRACT=TXT
+SET COUNT1 EVAL("var s=\"{{!EXTRACT}}\"; s.length")
+SET ITSHCH EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/[^\x00-\x7F]/g,''); ")
+SET COUNT2 EVAL("var s=\"{{ITSHCH}}\"; s.length")
+ADD COUNT1 -{{COUNT2}}
+ADD COUNT2 -{{COUNT1}}
+SET !EXTRACT EVAL("var y = \"{{ITSHCH}}\"; if (\"0\">\"{{COUNT2}}\") {y=\"#EANF#\";} y;")
+SET ITSHORT EVAL("var y = \"1\"; if (\"#EANF#\"==\"{{!EXTRACT}}\") {y=\"0\";} y;")
+SET !EXTRACT {{!EXTRACT}}xtrdt
+SET !EXTRACT  EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/ xtrdt/g,'xtrdt'); ")
+SET !EXTRACT  EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/xtrdt/,'\\.'); ")
+SET !EXTRACT  EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/\\!\\./,'\\.'); ")
+SET !EXTRACT  EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/\\?\\./,'\\.'); ")
+SET !EXTRACT  EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/\\.\\./,'\\.'); ")
+SET ITUNESHORT {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=SPAN ATTR=CLASS:RveJvd<SP>snByac
+TAG POS=1 TYPE=DIV ATTR=jsname:sngebd EXTRACT=TXT
+SET COUNT1 EVAL("var s=\"{{!EXTRACT}}\"; s.length")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/[^\x00-\x7F]/g,''); ")
+SET COUNT2 EVAL("var s=\"{{!EXTRACT}}\"; s.length")
+SET SKIPME EVAL("var y = \"{{SKIPME}}\"; if ({{COUNT2}} == 0) {y=\"1\";} y;")
+ADD COUNT1 -{{COUNT2}}
+ADD COUNT2 -{{COUNT1}}
+SET SKIPME EVAL("var y = \"{{SKIPME}}\"; if (\"0\">\"{{COUNT2}}\") {y=\"1\";} y;")
+SET !EXTRACT NULL
+TAG POS=1 TYPE=DIV ATTR=jsname:sngebd EXTRACT=TXT
+SET TXTDESCRIPTION "{{!EXTRACT}}"
+SET !EXTRACT NULL
+TAG POS=1 TYPE=DIV ATTR=jsname:sngebd EXTRACT=HTM
+SET SKIPME EVAL("var y = \"{{SKIPME}}\"; if (\"#EANF#\"==\"{{!EXTRACT}}\") {y=\"1\";} y;")
+SET !EXTRACT "{{!EXTRACT}}"
+SET EXTRACTA EVAL("var y = \"{{!EXTRACT}}\"; if (\"__undefined__\"==\"{{!EXTRACT}}\") {y=\"\";} y;")
+SET DTAB EVAL("var y = \"1\"; if (\"__undefined__\"==\"{{EXTRACTA}}\") {y=\"3\";} y;")
+TAB t={{DTAB}}
+SET URL EVAL("var y = \"javascript:stayinghere\"; if (\"__undefined__\"==\"{{EXTRACTA}}\") {y=\"https://pteo.paranoiaworks.mobi/diacriticsremover\";} y;")
+URL GOTO={{URL}}
+TAG POS=1 TYPE=INPUT:TEXT FORM=NAME:form1 ATTR=NAME:replacer CONTENT=
+TAG POS=1 TYPE=TEXTAREA FORM=NAME:form1 ATTR=NAME:txt CONTENT={{!EXTRACT}}
+TAG POS=1 TYPE=INPUT:BUTTON FORM=NAME:form1 ATTR=*
+SET !EXTRACT NULL
+TAG POS=1 TYPE=TEXTAREA FORM=NAME:form1 ATTR=NAME:txt EXTRACT=TXT
+SET PEXTRACT "{{!EXTRACT}}"
+SET !EXTRACT NULL
+TAG POS=1 TYPE=INPUT:TEXT FORM=NAME:form1 ATTR=NAME:replacer CONTENT=
+TAG POS=1 TYPE=TEXTAREA FORM=NAME:form1 ATTR=NAME:txt CONTENT={{!EXTRACT}}
+TAG POS=1 TYPE=INPUT:BUTTON FORM=NAME:form1 ATTR=*
+TAG POS=1 TYPE=TEXTAREA FORM=NAME:form1 ATTR=NAME:txt EXTRACT=TXT
+SET TXTDESCRIPTION "{{!EXTRACT}}"
+SET !EXTRACT NULL
+SET TXTDESCRIPTION EVAL("var variable=\"{{TXTDESCRIPTION}}\"; variable.replace(/\\n/g,'<p>'); ")
+SET TXTDESCRIPTION EVAL("var variable=\"{{TXTDESCRIPTION}}\"; variable.replace(/\\r/g,'<p>'); ")
+SET TXTDESCRIPTION EVAL("var variable=\"{{TXTDESCRIPTION}}\"; variable.replace(/(.*)/g,''); ")
+SET DESCRIPTION  EVAL("var y = \"{{EXTRACTA}}\"; if (\"__undefined__\"==\"{{EXTRACTA}}\") {y=\"{{PEXTRACT}}\";} y;")
+TAB t=1
+TAG POS=1 TYPE=DIV ATTR=ID:ember*&&CLASS:*we-truncate--interactive*<SP>ember-view* EXTRACT=TXT
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/\\n/g,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/  /g,''); ")
+SET COUNT1 EVAL("var s=\"{{!EXTRACT}}\"; s.length")
+SET COUNT1 EVAL("var s=\"{{!EXTRACT}}\"; s.length")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/[^\x00-\x7F]/g,''); ")
+SET COUNT2 EVAL("var s=\"{{!EXTRACT}}\"; s.length")
+SET SKIPMEIT EVAL("var y = \"{{SKIPMEIT}}\"; if ({{COUNT2}} == 0) {y=\"1\";} y;")
+ADD COUNT1 -{{COUNT2}}
+ADD COUNT2 -{{COUNT1}}
+SET SKIPMEIT EVAL("var y = \"{{SKIPMEIT}}\"; if (\"0\">\"{{COUNT2}}\") {y=\"1\";} y;")
+SET !EXTRACT NULL
+TAG POS=1 TYPE=DIV ATTR=ID:ember*&&CLASS:*we-truncate--interactive*<SP>ember-view* EXTRACT=TXT
+SET ITTXTDESCRIPTION "{{!EXTRACT}}"
+SET !EXTRACT NULL
+TAG POS=1 TYPE=script ATTR=NAME:schema:software-application&&CLASS:ember-view&&TYPE:application/ld+json EXTRACT=HTM
+SET !EXTRACT "{{!EXTRACT}}"
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/(.+)\",\"description\":\"/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/\",\"(.+)/,''); ")
+SET SKIPMEIT EVAL("var y = \"{{SKIPMEIT}}\"; if (\"#EANF#\"==\"{{!EXTRACT}}\") {y=\"1\";} y;")
+SET EXTRACTB EVAL("var y = \"{{!EXTRACT}}\"; if (\"__undefined__\"==\"{{!EXTRACT}}\") {y=\"\";} y;")
+SET DTAB EVAL("var y = \"1\"; if (\"__undefined__\"==\"{{EXTRACTB}}\") {y=\"3\";} y;")
+TAB t={{DTAB}}
+SET URL EVAL("var y = \"javascript:stayinghere\"; if (\"__undefined__\"==\"{{EXTRACTB}}\") {y=\"https://pteo.paranoiaworks.mobi/diacriticsremover\";} y;")
+URL GOTO={{URL}}
+TAG POS=1 TYPE=INPUT:TEXT FORM=NAME:form1 ATTR=NAME:replacer CONTENT=
+TAG POS=1 TYPE=TEXTAREA FORM=NAME:form1 ATTR=NAME:txt CONTENT={{!EXTRACT}}
+TAG POS=1 TYPE=INPUT:BUTTON FORM=NAME:form1 ATTR=*
+SET !EXTRACT NULL
+TAG POS=1 TYPE=TEXTAREA FORM=NAME:form1 ATTR=NAME:txt EXTRACT=TXT
+SET ITPEXTRACT "{{!EXTRACT}}"
+SET ITPEXTRACT EVAL("var variable=\"{{ITPEXTRACT}}\"; variable.replace(/(.+)\",\"description\":\"/,''); ")
+SET ITPEXTRACT EVAL("var variable=\"{{ITPEXTRACT}}\"; variable.replace(/\",\"(.+)/,''); ")
+SET !EXTRACT NULL
+TAG POS=1 TYPE=INPUT:TEXT FORM=NAME:form1 ATTR=NAME:replacer CONTENT=
+TAG POS=1 TYPE=TEXTAREA FORM=NAME:form1 ATTR=NAME:txt CONTENT={{ITTXTDESCRIPTION}}
+TAG POS=1 TYPE=INPUT:BUTTON FORM=NAME:form1 ATTR=*
+TAG POS=1 TYPE=TEXTAREA FORM=NAME:form1 ATTR=NAME:txt EXTRACT=TXT
+SET ITTXTDESCRIPTION "{{!EXTRACT}}"
+SET !EXTRACT NULL
+SET ITTXTDESCRIPTION EVAL("var variable=\"{{ITTXTDESCRIPTION}}\"; variable.replace(/\\n/g,'<p>'); ")
+SET ITTXTDESCRIPTION EVAL("var variable=\"{{ITTXTDESCRIPTION}}\"; variable.replace(/\\r/g,'<p>'); ")
+SET ITTXTDESCRIPTION EVAL("var variable=\"{{ITTXTDESCRIPTION}}\"; variable.replace(/(.*)/g,''); ")
+SET ITDESCRIPTION EVAL("var y = \"{{EXTRACTB}}\"; if (\"__undefined__\"==\"{{EXTRACTB}}\") {y=\"{{ITPEXTRACT}}\";} y;")
+TAB t=1
+SET DESCRIPTION EVAL("var y = \"{{DESCRIPTION}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITDESCRIPTION}}\";} y;")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<br>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/\\n/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/\\r/g,'<p>'); ")
+SET ITDESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/p>     <p dir=\"(.?)t(.?)\">/g,'<p>'); ")
+SET ITDESCRIPTION EVAL("var variable=\"{{ITDESCRIPTION}}\"; variable.replace(/<\\/p>     <p>     <p dir=\"(.?)t(.?)\">/g,'<p>'); ")
+SET ITDESCRIPTION EVAL("var variable=\"{{ITDESCRIPTION}}\"; variable.replace(/<div(.+)<p dir=\"(.?)t(.?)\">/,'<p>'); ")
+SET ITDESCRIPTION EVAL("var variable=\"{{ITDESCRIPTION}}\"; variable.replace(/<\\/p>     <p dir=\"(.?)t(.?)\" data-test-bidi=\"\">/g,'<p>'); ")
+SET ITDESCRIPTION EVAL("var variable=\"{{ITDESCRIPTION}}\"; variable.replace(/<\\/p>     <p>     <p dir=\"(.?)t(.?)\" data-test-bidi=\"\">/g,'<p>'); ")
+SET ITDESCRIPTION EVAL("var variable=\"{{ITDESCRIPTION}}\"; variable.replace(/<\\/p>     <p>     <p>     <p>     (.+)<\\/div>/,'<p>'); ")
+SET ITDESCRIPTION EVAL("var variable=\"{{ITDESCRIPTION}}\"; variable.replace(/<\\/p> <p> <p dir=\"(.?)t(.?)\" data-test-bidi=\"\">/g,'<p>'); ")
+SET ITDESCRIPTION EVAL("var variable=\"{{ITDESCRIPTION}}\"; variable.replace(/<\\/p> <br> <p dir=\"(.?)t(.?)\" data-test-bidi=\"\">/g,'<p>'); ")
+SET ITDESCRIPTION EVAL("var variable=\"{{ITDESCRIPTION}}\"; variable.replace(/<\\/p> <p dir=\"(.?)t(.?)\" data-test-bidi=\"\">/g,'<p>'); ")
+SET ITDESCRIPTION EVAL("var variable=\"{{ITDESCRIPTION}}\"; variable.replace(/<\\/p> <p> <p> <p dir=\"(.?)t(.?)\" data-test-bidi=\"\">/g,'<p>'); ")
+SET ITDESCRIPTION EVAL("var variable=\"{{ITDESCRIPTION}}\"; variable.replace(/<\\/p>(.+)<p dir=\"(.?)t(.?)\" data-test-bidi=\"\">/g,'<\\/p>'); ")
+SET ITDESCRIPTION EVAL("var variable=\"{{ITDESCRIPTION}}\"; variable.replace(/<div(.+)<p dir=\"(.?)t(.?)\" data-test-bidi=\"\">/,'<p>'); ")
+SET ITDESCRIPTION EVAL("var variable=\"{{ITDESCRIPTION}}\"; variable.replace(/<\\/p>(.+)<\\/div>/g,'<\\/p>'); ")
+SET ITDESCRIPTION EVAL("var variable=\"{{ITDESCRIPTION}}\"; variable.replace(/<\\/p>           <button(.+)>/,'<\\/p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<a href(.+)<\\/a><\\/div>/,'<\\/p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<a href(?!.*<a href)(.+)\">/,'LASTHREFFF'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<a href(?!.*<a href)(.+)\">/,'LASTHREFFF'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<a href(?!.*<a href)(.+)\">/,'LASTHREFFF'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<a href(?!.*<a href)(.+)\">/,'LASTHREFFF'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<a href(?!.*<a href)(.+)\">/,'LASTHREFFF'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<a href(?!.*<a href)(.+)\">/,'LASTHREFFF'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<a href(?!.*<a href)(.+)\">/,'LASTHREFFF'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/LASTHREFFF/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<div (.+)\">/,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/div>(.+)/,'<\\/p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/div>/,'<\\/p>'); ")
+SET DESCRIPTION EVAL("var y = \"{{DESCRIPTION}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITDESCRIPTION}}\";} y;")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<b>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/b>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<em>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/em>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<center>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/center>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/&amp;/g,'&'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/&nbsp;/g,' '); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/&lt;/g,'<'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/&gt;/g,'>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<u>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/u>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<i>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/i>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<a>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/a>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<strong>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/strong>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<font>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/font>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<span>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/span>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<big>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/big>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<ul>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<li>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<h1>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<h2>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<h3>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<h4>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<h5>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/ul>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/li>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/h1>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/h2>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/h3>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/h4>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/h5>/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/[^\x00-\x7F]/g,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/               /g,' '); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/    /g,' '); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/  /g,' '); ")
+SET DESCRIPTION <p>{{DESCRIPTION}}</p>
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p> /g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/ <p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p> \\.<p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p>\\.<p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p>\\.<p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p>\"<p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p>\\;<p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p>\\:<p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p>\\,<p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p>\\-<p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p>\\+<p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p> <p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p><p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p>\W{1,}<p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p>\W{1,}<p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p>\W{1,}<p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p>\W{1,}<p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p> <p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p><p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p> <p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p><p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p><p>/g,'<p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<\\/p><\\/p>/g,'<\\/p>'); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/<p>__undefined__<\\/p>/,''); ")
+SET DESCRIPTION EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/__undefined__/,''); ")
+SET DESCRIPTION EVAL("var y = \"{{DESCRIPTION}}\"; if (\"{{DESCRIPTION}}\"==\"<p></p>\") {y=\"\";} y;")
+SET DESCRIPTION {{DESCRIPTION}}{{TXTDESCRIPTION}}{{ITTXTDESCRIPTION}}
+SET SHORT EVAL("var variable=\"{{DESCRIPTION}}\"; variable.replace(/\\*/g,''); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/\\=/g,''); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/--/g,''); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/#/g,''); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/\\/\\/\\//g,''); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/<p>-/,''); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/<p> -/,''); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/<p>\\+/,''); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/<p> <p>/g,'<p>'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/<p> /g,'<p>'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/<p><p>/g,'<p>'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/<p>/,''); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/<\\/p>/g,''); ")
+SET SHORT DLM_PLS{{SHORT}}
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/DLM_PLS /,''); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/DLM_PLS/,''); ")
+SET SHORT EVAL("var s=\"{{SHORT}}\"; s.slice(0,146);")
+SET SHORT {{SHORT}}DLM_PLS
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/\\.<p>(.+)DLM_PLS/,'\\.'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/<p>(.+)DLM_PLS/,'\\.\\.\\.'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/\\. (.+)DLM_PLS/,'\\.'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/\\.DLM_PLS/,'\\.'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/\\.<p>DLM_PLS/,'\\.'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/ (?!.* )/,'<LSTSPC>'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/<LSTSPC>(.+)DLM_PLS/,'\\.\\.\\.'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/<LSTSPC>/,' '); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/DLM_PLS/,'\\.\\.\\.'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/\\!/g,'\\.'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/\\?/,'\\.'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/\\.\\.\\.\\./,'\\.\\.\\.'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/\\:\\.\\.\\./,'\\.\\.\\.'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/<p>/g,' '); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/<\\p>/g,''); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/\\!\\.\\.\\./,'\\.\\.\\.'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/\\?\\.\\.\\./,'\\?'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/\\,\\./g,'.'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/\\?\\./g,'.'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/\\. \\.\\.\\./g,'.'); ")
+SET SHORT EVAL("var variable=\"{{SHORT}}\"; variable.replace(/ \\.\\.\\./g,'.'); ")
+SET ITUNESHORT EVAL("var y = \"{{ITUNESHORT}}\"; if (\"0\"==\"{{ITSHORT}}\") {y=\"{{SHORT}}\";} y;")
+SET SHORT EVAL("var y = \"{{SHORT}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITUNESHORT}}\";} y;")
+TAG POS=1 TYPE=A ATTR=itemprop:genre EXTRACT=HREF
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/(.+)\\//,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET CAT {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=BUTTON  ATTR=class:LkLjZd<SP>ScJHi<SP>*IfEcue* EXTRACT=TXT
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,'FREE'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/Installed/,'FREE'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/Install/,'FREE'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/\\$(.+)/,'PURCHASE'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/\\RUB(.+)/,'PURCHASE'); ")
+SET LIC {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=BUTTON  ATTR=class:LkLjZd<SP>ScJHi<SP>*IfEcue* EXTRACT=TXT
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/Installed/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/Install/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/\\$/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/ (.+)/,''); ")
+SET PRICE {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=A attr=class:hrTbp<SP>R8zArc EXTRACT=HREF
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET GPLINK {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=A attr=class:hrTbp<SP>&&TXT:Visit<SP>website EXTRACT=HREF
+SET !EXTRACT EVAL("var y = \"{{!EXTRACT}}\"; if (\"#EANF#\"==\"{{!EXTRACT}}\") {y=\"{{GPLINK}}\";} y;")
+SET DEVSITE {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=A attr=class:hrTbp<SP>*&&HREF:mailto:* EXTRACT=HREF
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/mailto:/,''); ")
+SET MAIL {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=div ATTR=class:hAyfc&&TXT:Current<SP>Version* EXTRACT=TXT
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/Current Version/,''); ")
+SET VERSION EVAL("var y = \"0\"; if (\"0\"==\"{{SKIPME}}\") {y=\"{{!EXTRACT}}\";} y;")
+SET !EXTRACT NULL
+TAG POS=1 TYPE=div ATTR=class:hAyfc&&TXT:Requires<SP>Android* EXTRACT=TXT
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/Requires Android/,'Requires Android '); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/ Varies with device/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET REQ {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=DIV ATTR=CLASS:information-list__item<SP>l-row&&TXT:Category* EXTRACT=HTM
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/<\\/a>(.+)<\\/div>/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/<div class(.+)>/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/&amp;/g,'&'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/                   /g,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/                 /g,''); ")
+SET ITCAT {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=li ATTR=CLASS:inline-list__item&&TXT:#*<SP>in<SP>* EXTRACT=HTM
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/<li (.+) in /,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/    (.+)         <\\/li>/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/&amp;/g,'&'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/(.+)genreName(.+)/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET ITCAT EVAL("var y = \"{{!EXTRACT}}\"; if (\"\"==\"{{!EXTRACT}}\") {y=\"{{ITCAT}}\";} y;")
+SET !EXTRACT NULL
+TAG POS=1 TYPE=LI ATTR=CLASS:inline-list__item<SP>inline-list__item--bulleted*price EXTRACT=TXT
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/Free/,'FREE'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/\\$(.+)/,'PURCHASE'); ")
+SET ITLIC {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=LI ATTR=CLASS:inline-list__item<SP>inline-list__item--bulleted*price EXTRACT=TXT
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/Free/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/\\$/,''); ")
+SET ITPRICE {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=LINK ATTR=HREF:http*/app/*id{{!COL1}}* EXTRACT=HREF
+SET SKIPMEIT EVAL("var y = \"{{SKIPMEIT}}\"; if (\"#EANF#\"==\"{{!EXTRACT}}\") {y=\"1\";} y;")
+SET MACTEST EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/(.*)?mt=12(.*)/,'MAC'); ")
+SET SKIPMEIT EVAL("var y = \"{{SKIPMEIT}}\"; if (\"{{MACTEST}}\"==\"MAC\") {y=\"1\";} y;")
+SET ADDTOITURL EVAL("var y = \"?uo=4&at=11l9z8\"; if (\"{{MACTEST}}\"==\"MAC\") {y=\"&uo=4&at=11l9z8\";} y;") 
+SET !EXTRACT EVAL("var y = \"{{!EXTRACT}}{{ADDTOITURL}}\"; if (\"#EANF#\"==\"{{!EXTRACT}}\") {y=\"NULL\";} y;")
+SET ITPURL {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=DT ATTR=CLASS:information-list__item__term<SP>medium-valign-top*&&TXT:Compatibility EXTRACT=TXT
+SET !EXTRACT NULL
+TAG POS=R1 TYPE=DD ATTR=id:ember*&&TXT:*OS* EXTRACT=HTM
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/<(.+)Requires/,'Requires'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/<(.+)OS X/,'OS X'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/<(.+)macOS/,'macOS'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/<(.+)/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/     /,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/&amp;/g,'&'); ")
+SET ITREQ {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=SPAN ATTR=CLASS:badge<SP>badge--product-title EXTRACT=TXT
+SET !EXTRACT NULL
+TAG POS=R1 TYPE=A ATTR=CLASS:link&&href:*apps.apple.com/us/developer/* EXTRACT=HREF
+SET ITDEVIDURL {{!EXTRACT}}
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/https:\\/\\/apps.apple.com\\/us\\/developer\\/(.+)\\/id/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/https:\\/\\/apps.apple.com\\/us\\/developer\\/(.+)\\//,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/\\?mt=(.+)/,''); ")
+SET ITDEVID {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=A ATTR=CLASS:*link*&&TXT:Developer<SP>Website EXTRACT=HREF
+SET ITDEVURL {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=A ATTR=CLASS:*link*&&TXT:App<SP>Support EXTRACT=HREF
+SET !EXTRACT EVAL("var y = \"{{ITDEVURL}}\"; if (\"#EANF#\"==\"{{ITDEVURL}}\") {y=\"{{!EXTRACT}}\";} y;")
+SET !EXTRACT EVAL("var y = \"{{ITDEVURL}}\"; if (\"#EANF#\"==\"{{ITDEVURL}}\") {y=\"{{ITDEVIDURL}}\";} y;")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/#EANF#/,''); ")
+SET ITDEVURL {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=not-preregistered ATTR=TXT:* EXTRACT=TXT
+SET PREREG EVAL("var y = \"0\"; if (\"Pre-register\"==\"{{!EXTRACT}}\") {y=\"1\";} y;")
+SET !EXTRACT NULL
+TAG POS=1 TYPE=li ATTR=CLASS:inline-list__item<SP>app-header__list__item--preorder EXTRACT=TXT
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/\\n/g,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/ /g,''); ")
+SET PREREG EVAL("var y = \"{{PREREG}}\"; if (\"Pre-Order\"==\"{{!EXTRACT}}\") {y=\"1\";} y;")
+SET PRERELTXT EVAL("var y = \"Google Play where you can pre-register to be notified when the app is released.\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"the Apple App Store where you can place a pre-order.\";} y;")
+SET PRERELTXT EVAL("var y = \"\"; if (\"{{PREREG}}\"==\"1\") {y=\"The app is not yet available. The Download Now link directs you to the product page in {{PRERELTXT}}\";} y;")
+SET !EXTRACT NULL
+TAG POS=1 TYPE=IMG ATTR=CLASS:we-artwork__image<SP>ember* EXTRACT=HREF
+SET ITICON {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=PICTURE ATTR=ID:ember*&&CLASS:*we-artwork--fullwidth*screenshot* EXTRACT=HTM
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/<picture(.+)srcset=\"https:/,'https:'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/.jpg (.+)/,'.jpg'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/.png (.+)/,'.png'); ")
+SET ITSCREEN1 {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=2 TYPE=PICTURE ATTR=ID:ember*&&CLASS:*we-artwork--fullwidth*screenshot* EXTRACT=HTM
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/<picture(.+)srcset=\"https:/,'https:'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/.jpg (.+)/,'.jpg'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/.png (.+)/,'.png'); ")
+SET ITSCREEN2 {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=3 TYPE=PICTURE ATTR=ID:ember*&&CLASS:*we-artwork--fullwidth*screenshot* EXTRACT=HTM
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/<picture(.+)srcset=\"https:/,'https:'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/.jpg (.+)/,'.jpg'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/.png (.+)/,'.png'); ")
+SET ITSCREEN3 {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=4 TYPE=PICTURE ATTR=ID:ember*&&CLASS:*we-artwork--fullwidth*screenshot* EXTRACT=HTM
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/<picture(.+)srcset=\"https:/,'https:'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/.jpg (.+)/,'.jpg'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/.png (.+)/,'.png'); ")
+SET ITSCREEN4 {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=IMG ATTR=alt:cover<SP>art EXTRACT=HREF
+SET ICON {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=1 TYPE=IMG ATTR=alt:screenshot<SP>image EXTRACT=HREF
+SET SCREEN1 {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=2 TYPE=IMG ATTR=alt:screenshot<SP>image EXTRACT=HREF
+SET SCREEN2 {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=3 TYPE=IMG ATTR=alt:screenshot<SP>image EXTRACT=HREF
+SET SCREEN3 {{!EXTRACT}}
+SET !EXTRACT NULL
+TAG POS=4 TYPE=IMG ATTR=alt:screenshot<SP>image EXTRACT=HREF
+SET SCREEN4 {{!EXTRACT}}
+SET !EXTRACT NULL
+SET ICON EVAL("var y = \"{{ICON}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITICON}}\";} y;")
+SET SCREEN1 EVAL("var y = \"{{SCREEN1}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITSCREEN1}}\";} y;")
+SET SCREEN2 EVAL("var y = \"{{SCREEN2}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITSCREEN2}}\";} y;")
+SET SCREEN3 EVAL("var y = \"{{SCREEN3}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITSCREEN3}}\";} y;")
+SET SCREEN4 EVAL("var y = \"{{SCREEN4}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITSCREEN4}}\";} y;")
+'URL GOTO={{ICON}}
+'ONDOWNLOAD FOLDER={{!FOLDER_DATASOURCE}}\\IMAGES FILE={{!COL1}}_ICON.png WAIT=YES
+'TAG POS=1 TYPE=IMG ATTR=ALT:* CONTENT=EVENT:SAVEITEM
+'URL GOTO={{SCREEN1}}
+'ONDOWNLOAD FOLDER={{!FOLDER_DATASOURCE}}\\IMAGES FILE={{!COL1}}_SCREENSHOT_1.png WAIT=YES
+'TAG POS=1 TYPE=IMG ATTR=ALT:* CONTENT=EVENT:SAVEITEM
+'URL GOTO={{SCREEN2}}
+'ONDOWNLOAD FOLDER={{!FOLDER_DATASOURCE}}\\IMAGES FILE={{!COL1}}_SCREENSHOT_2.png WAIT=YES
+'TAG POS=1 TYPE=IMG ATTR=ALT:* CONTENT=EVENT:SAVEITEM
+'URL GOTO={{SCREEN3}}
+'ONDOWNLOAD FOLDER={{!FOLDER_DATASOURCE}}\\IMAGES FILE={{!COL1}}_SCREENSHOT_3.png WAIT=YES
+'TAG POS=1 TYPE=IMG ATTR=ALT:* CONTENT=EVENT:SAVEITEM
+'URL GOTO={{SCREEN4}}
+'ONDOWNLOAD FOLDER={{!FOLDER_DATASOURCE}}\\IMAGES FILE={{!COL1}}_SCREENSHOT_4.png WAIT=YES
+'TAG POS=1 TYPE=IMG ATTR=ALT:* CONTENT=EVENT:SAVEITEM
+SET CHECK Varies<SP>with<SP>device
+SET URL EVAL("var y = \"javascript:stayinghere\"; if (\"#EANF#\"==\"{{VERSION}}\") {y=\"https://apkpure.com/test/{{!COL1}}\";} y;")
+SET URL EVAL("var y = \"{{URL}}\"; if (\"{{CHECK}}\"==\"{{VERSION}}\") {y=\"https://apkpure.com/test/{{!COL1}}\";} y;")
+URL GOTO={{URL}}
+TAG POS=1 TYPE=STRONG ATTR=TXT:Latest<SP>Version*
+TAG POS=R1 TYPE=P ATTR=TXT:* EXTRACT=TXT
+SET VERSION EVAL("var y = \"{{!EXTRACT}}\"; if (\"#EANF#\"==\"{{!EXTRACT}}\") {y=\"{{VERSION}}\";} y;")
+SET VERSION EVAL("var y = \"{{VERSION}}\"; if (\"#EANF#\"==\"{{VERSION}}\") {y=\"<SP>\";} y;")
+SET VERSION EVAL("var variable=\"{{VERSION}}\"; variable.replace(/Varies with device/,''); ")
+SET !EXTRACT NULL
+SET ID {{!COL1}}
+SET COMPNAME EVAL("var y = \"{{COMPNAME}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITCOMPNAME}}\";} y;")
+SET PRODNAME EVAL("var y = \"{{PRODNAME}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITPRODNAME}}\";} y;")
+SET VERSION EVAL("var y = \"{{VERSION}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITVERSION}}\";} y;")
+SET CAT EVAL("var y = \"{{CAT}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITCAT}}\";} y;")
+SET LIC EVAL("var y = \"{{LIC}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITLIC}}\";} y;")
+SET PRICE EVAL("var y = \"{{PRICE}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITPRICE}}\";} y;")
+SET REQ EVAL("var y = \"{{REQ}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITREQ}}\";} y;")
+SET PRODURL EVAL("var y = \"https://play.google.com/store/apps/details?id={{!COL1}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITPURL}}\";} y;")
+SET DEVID EVAL("var y = \"{{COMPNAME}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITDEVID}}\";} y;")
+SET DEVSITE EVAL("var y = \"{{DEVSITE}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{ITDEVURL}}\";} y;")
+SET DEVMAIL <sp>
+SET DEVMAIL EVAL("var y = \"{{MAIL}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{DEVMAIL}}\";} y;")
+SET !ICON EVAL("var variable=\"{{ICON}}\"; variable.replace(/#EANF#/,'none'); ")
+SET SCREEN1 EVAL("var variable=\"{{SCREEN1}}\"; variable.replace(/#EANF#/,'none'); ")
+SET SCREEN2 EVAL("var variable=\"{{SCREEN2}}\"; variable.replace(/#EANF#/,'none'); ")
+SET SCREEN3 EVAL("var variable=\"{{SCREEN3}}\"; variable.replace(/#EANF#/,'none'); ")
+SET SCREEN4 EVAL("var variable=\"{{SCREEN4}}\"; variable.replace(/#EANF#/,'none'); ")
+SET SCREEN1 EVAL("var variable=\"{{SCREEN1}}\"; variable.replace(/data:image\\/gif(.+)/,'none'); ")
+SET SCREEN2 EVAL("var variable=\"{{SCREEN2}}\"; variable.replace(/data:image\\/gif(.+)/,'none'); ")
+SET SCREEN3 EVAL("var variable=\"{{SCREEN3}}\"; variable.replace(/data:image\\/gif(.+)/,'none'); ")
+SET SCREEN4 EVAL("var variable=\"{{SCREEN4}}\"; variable.replace(/data:image\\/gif(.+)/,'none'); ")
+TAB t=2
+SET DEVFILE EVAL("var y = \"{{DEVID}}\"; if (\"__undefined__\"==\"{{DEVID}}\") {y=\"\";} y;")
+SET DEVFILE EVAL("var variable=\"{{DEVFILE}}\"; variable.replace(/[^\x00-\x7F]/g,'?'); ")
+SET DEVFILE EVAL("var variable=\"{{DEVFILE}}\"; variable.replace(/[^\w]/g,''); ")
+SET DEVFILE EVAL("var s=\"{{DEVFILE}}\"; s.toLowerCase()")
+SET DEVFILE EVAL("var s=\"{{DEVFILE}}\"; s.substring(0, 2)")
+SET DEVFILE EVAL("var y = \"{{DEVFILE}}\"; if (\"\"==\"{{DEVFILE}}\") {y=\"other\";} y;")
+URL GOTO=file:///{{!FOLDER_DATASOURCE}}/CID/{{DEVFILE}}.htm
+TAG POS=1 TYPE=i ATTR=TXT:{{DEVID}}_FRMN_ID_* EXTRACT=TXT
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/(.+)_FRMN_ID_/,''); ")
+SET COMPNAME EVAL("var y = \"FOREMAN_CID_{{!EXTRACT}}\"; if (\"#EANF#\"==\"{{!EXTRACT}}\") {y=\"{{COMPNAME}}\";} y;")
+SET DEVID2 EVAL("var variable=\"{{DEVID}}\"; variable.replace(/[^\x00-\x7F]/g,'?'); ")
+SET DEVID3 EVAL("var variable=\"{{DEVID2}}\"; variable.replace(/[a-z]/g,''); ")
+SET DEVID3 EVAL("var variable=\"{{DEVID3}}\"; variable.replace(/[A-Z]/g,''); ")
+SET DEVID2 EVAL("var y = \"{{DEVID2}}\"; if (\"{{DEVID2}}\"==\"{{DEVID3}}\") {y=\"{{DEVID}}\";} y;")
+SET TAGI EVAL("var y = \"0\"; if (\"#EANF#\"==\"{{!EXTRACT}}\") {y=\"1\";} y;")
+SET !EXTRACT NULL
+TAG POS={{TAGI}} TYPE=i ATTR=TXT:{{DEVID}}_FRMN_ID_* EXTRACT=TXT
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/(.+)_FRMN_ID_/,''); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; if (\"\"==\"{{!EXTRACT}}\") {y=\"#EANF#\";} y;")
+SET COMPNAME EVAL("var y = \"FOREMAN_CID_{{!EXTRACT}}\"; if (\"#EANF#\"==\"{{!EXTRACT}}\") {y=\"{{COMPNAME}}\";} y;")
+SET COUNTS EVAL("var s=\"{{SHORT}}\"; s.length")
+SET SHORT EVAL("var y = \"{{SHORT}}\"; if (\"{{COUNTS}}\"<10) {y=\"Install {{PRODNAME}} on your {{PLATFORM}} device\\.\";} y;")
+SET SHORT EVAL("var y = \"{{SHORT}}\";  if (\"__undefined__...\"==\"{{SHORT}}\")  {y=\"Install {{PRODNAME}} on your {{PLATFORM}} device\\.\";} y;")
+TAB t=1
+
+SET MYTREND {{!COL2}}
+SET RAWCAT {{CAT}}
+
+
+SET URL EVAL("var y = \"javascript:stayinghere\"; if (\"{{PLATFORM}}{{CAT}}\"==\"iOSGames\") {y=\"https://www.applyzer.com/?mmenu=rankings&app={{ID}}&market=1\";} y;")
+SET URL EVAL("var y = \"{{URL}}\"; if (\"{{PLATFORM}}{{CAT}}\"==\"iOSSports\") {y=\"https://www.applyzer.com/?mmenu=rankings&app={{ID}}&market=1\";} y;")
+SET URL EVAL("var y = \"{{URL}}\"; if (\"{{SKIPME}}\"==\"1\") {y=\"javascript:stayinghere\";} y;")
+URL GOTO={{URL}}
+SET SEC EVAL("var y = \"0\"; if (\"{{URL}}\"==\"https://www.applyzer.com/?mmenu=rankings&app={{ID}}&market=1\") {y=\"2\";} y;")
+SET SEC EVAL("var y = \"{{SEC}}\"; if (\"{{SKIPME}}\"==\"1\") {y=\"0\";} y;")
+WAIT SECONDS = {{SEC}}
+TAG POS=1 TYPE=DD ATTR=TXT:Games/* EXTRACT=TXT
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/Games\\/Sports/,'game_sports'); ")
+SET !EXTRACT EVAL("var variable=\"{{!EXTRACT}}\"; variable.replace(/Games\\//,''); ")
+SET CAT EVAL("var y = \"{{!EXTRACT}}\"; if (\"#EANF#\"==\"{{!EXTRACT}}\") {y=\"{{CAT}}\";} y;")
+SET !EXTRACT NULL
+SET CAT EVAL("var s=\"{{CAT}}\"; s.toLowerCase()")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/books_and_reference/,'18495<cat2>1118'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/food_and_drink/,'20427<cat2>1216'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_action/,'2095<cat2>1192'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_adventure/,'2097<cat2>1057'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_arcade/,'2099<cat2>1115'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_board/,'18516<cat2>980'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_card/,'2647<cat2>1023'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_casino/,'2647<cat2>1023'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_casual/,'20416<cat2>1218'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_educational/,'20416<cat2>1218'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_music/,'20416<cat2>1218'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_puzzle/,'2111<cat2>1147'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_racing/,'7513<cat2>1108'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_role_playing/,'7536<cat2>1180'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_simulation/,'2115<cat2>1091'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_sports/,'2117<cat2>1090'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_strategy/,'2119<cat2>1166'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_trivia/,'20416<cat2>1218'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/game_word/,'2111<cat2>1147'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/health_and_fitness/,'2129<cat2>1107'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/house_and_home/,'2056<cat2>1167'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/libraries_and_demo/,'20432<cat2>1018'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/maps_and_navigation/,'20426<cat2>1050'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/media_and_video/,'13632<cat2>1199'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/music_and_audio/,'2141<cat2>1157'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/news_and_magazines/,'2164<cat2>1075'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/travel_and_local/,'20420<cat2>979'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/video_players/,'13632<cat2>1199'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/art_and_design/,'20413<cat2>1245'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/auto_and_vehicles/,'2056<cat2>1167'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/health & fitness/,'2129<cat2>1107'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/food & drink/,'20427<cat2>1216'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/kids & family/,'2102<cat2>1064'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/photo & video/,'12511<cat2>1094'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/books/,'20412<cat2>1195'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/book/,'20412<cat2>1195'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/magazines & newspapers/,'20412<cat2>1195'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/action/,'2095<cat2>1192'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/adventure/,'2097<cat2>1057'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/arcade/,'2099<cat2>1115'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/beauty/,'31713<cat2>1049'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/board/,'18516<cat2>980'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/business/,'2064<cat2>1178'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/card/,'2647<cat2>1023'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/casino/,'2647<cat2>1023'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/comics/,'31711<cat2>1183'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/communication/,'2150<cat2>1152'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/stickers/,'2150<cat2>1152'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/gaming/,'2150<cat2>1152'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/dating/,'12941<cat2>1233'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/dice/,'2647<cat2>1023'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/educational/,'2115<cat2>1091'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/entertainment/,'31711<cat2>1006'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/events/,'31711<cat2>1183'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/family/,'2102<cat2>1064'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/finance/,'2057<cat2>1230'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/education/,'20414<cat2>1223'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/games/,'20416<cat2>1218'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/lifestyle/,'31713<cat2>1049'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/medical/,'2129<cat2>1107'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/music/,'2141<cat2>1157'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/navigation/,'12940<cat2>1176'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/news/,'2164<cat2>1075'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/parenting/,'2132<cat2>1100'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/personalization/,'2072<cat2>1046'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/photography/,'12511<cat2>1094'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/productivity/,'20418<cat2>1022'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/puzzle/,'2111<cat2>1147'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/racing/,'7513<cat2>1108'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/reference/,'18495<cat2>1118'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/role playing/,'7536<cat2>1180'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/shopping/,'2649<cat2>1198'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/simulation/,'2115<cat2>1091'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/social networking/,'12941<cat2>1233'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/sports/,'2136<cat2>1066'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/strategy/,'2119<cat2>1166'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/tools/,'20432<cat2>1018'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/transportation/,'20428<cat2>1126'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/travel/,'20428<cat2>1126'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/trivia/,'2111<cat2>1147'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/utilities/,'2094<cat2>1129'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/weather/,'18555<cat2>1133'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/word/,'2111<cat2>1147'); ")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/social/,'12941<cat2>1233'); ")
+SET CHKCAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/(.+)<cat2>(.+)/,'<cat2>'); ")
+SET CAT EVAL("var y = \"20432<cat2>1018\"; if (\"<cat2>\"==\"{{CHKCAT}}\") {y=\"{{CAT}}\";} y;")
+SET CAT EVAL("var variable=\"{{CAT}}\"; variable.replace(/<cat2>(.+)/,''); ")
+SET COMP2 EVAL("var variable=\"{{COMPNAME}}\"; variable.replace(/[^\x00-\x7F]/g,''); ")
+SET COMP2 {{COMP2}}<DLMPLS>
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ <DLMPLS>/,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ (Pvt) Ltd<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ Pvt Ltd<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ PTE.LTD.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ Pty Ltd<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ (Pty) Ltd<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ Pvt. Ltd.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ CO.LTD.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ Co.Ltd<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ Co. Ltd.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ Co., Ltd<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ Ltd Sti<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ sp z o.o.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ sp. z o.o.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ s.r.l.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ a.s.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ GmbH<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ LLC.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ LLC<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ Ltd.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ LTD<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ B.V.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ Inc.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ d.o.o.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ INC<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ s.r.o.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ S.A.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ CO.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ CO<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ srl<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ & co.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ & co<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ <DLMPLS>/,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/,<DLMPLS>/,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ <DLMPLS>/,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/ Co.<DLMPLS>/i,'<DLMPLS>'); ")
+SET COMP2 EVAL("var variable=\"{{COMP2}}\"; variable.replace(/<DLMPLS>/,''); ")
+SET COMP2 EVAL("var y = \"{{COMP2}}\"; if (\"{{COMP2}}\"==\"{{COMPNAME}}\") {y=\"\";} y;")
+
+SET !EXTRACT {{COMPNAME}}
+ADD !EXTRACT {{ID}}
+ADD !EXTRACT {{PRODNAME}}
+ADD !EXTRACT {{VERSION}}
+ADD !EXTRACT {{SHORT}}
+ADD !EXTRACT {{DESCRIPTION}}
+ADD !EXTRACT {{CAT}}
+ADD !EXTRACT {{LIC}}
+ADD !EXTRACT {{PRICE}}
+ADD !EXTRACT {{PRODURL}}
+ADD !EXTRACT {{REQ}}
+ADD !EXTRACT {{DEVID}}
+ADD !EXTRACT {{DEVSITE}}
+ADD !EXTRACT {{DEVMAIL}}
+ADD !EXTRACT {{ICON}}
+ADD !EXTRACT {{SCREEN1}}
+ADD !EXTRACT {{SCREEN2}}
+ADD !EXTRACT {{SCREEN3}}
+ADD !EXTRACT {{SCREEN4}}
+ADD !EXTRACT {{PLATFORM}}
+ADD !EXTRACT {{COMP2}}
+ADD !EXTRACT {{RAWCAT}}
+ADD !EXTRACT {{MYTREND}}
+
+
+SET SKIPME EVAL("var y = \"{{SKIPME}}\"; if (\"{{PLATFORM}}\"==\"iOS\") {y=\"{{SKIPMEIT}}\";} y;")
+SET FILENAME EVAL("var y = \"Daily_Trends_Data.csv\"; if (\"{{SKIPME}}\"==\"1\") {y=\"\";} y;")
+SAVEAS TYPE=EXTRACT FOLDER={{!FOLDER_DATASOURCE}} FILE={{FILENAME}}
+SET !EXTRACT NULL
